@@ -5,7 +5,7 @@ authors = ["Dr Alun ap Rhisiart"]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DataFramesMeta = "1313f7d8-7da2-5740-9ea0-a2ca25f37964"
 DrWatson = "634d3b9d-ee7a-5ddf-bec9-22491ea816e1"
-Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
+Parquet2 = "98572fba-bba0-415d-956f-fa77e587d26d"
 
 [compat]
 DrWatson = "2.13.0"
