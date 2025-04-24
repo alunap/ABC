@@ -91,6 +91,8 @@ using PythonCall
 
 
 mute_swan = @rsubset(bird_counts, :Species == "Mute Swan")
+dipper = @rsubset(bird_counts, :Species == "Dipper")
+kingfisher = @rsubset(bird_counts, :Species == "Kingfisher")
 
 # how many species are we dealing with?
 unique(birds, :Species)
