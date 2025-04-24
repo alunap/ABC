@@ -2,9 +2,9 @@
 library(tidyverse)
 data <- read.csv("data/exp_raw/ABC_2000_2022.csv")
 summary(data)
-ggplot(data, aes(x = year, y = bird_count, color = location)) +
+ggplot(data, aes(x = year(date), y = count, color = place)) +
     geom_line()
-
+year("2006/04/23")
 library(rstanarm)
 model <- stan_glmer(bird_count ~ temperature + (1 | location) + (1 | year),
     family = poisson(link = "log"),
