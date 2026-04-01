@@ -1,0 +1,9 @@
+default_provider = "keychain"
+
+[providers.keychain]
+type = "keychain"
+service = 'fnox set POSTGRES_PWD "strawberrySundae"'
+prefix = "fnox list"
+
+[secrets]
+postgres= { description = "pwd for postgresql on Docker", provider = "keychain", value = "postgres" }
