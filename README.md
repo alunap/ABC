@@ -28,3 +28,11 @@ using DrWatson
 @quickactivate "ABC"
 ```
 which auto-activate the project and enable local path handling from DrWatson.
+
+## Purpose
+Learning about Hierachical Mixed Effects models applied to ecological count data of birds.
+The data is generously provided by Jim Dickson (county bird recorder) and Malcolm Chattwood
+(assistant county bird recorder). 
+
+Much of the data engineering (cleaning, etc) is done in Julia, but models usually in R as 
+those handle censored data well.
