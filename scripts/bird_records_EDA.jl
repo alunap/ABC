@@ -9,14 +9,12 @@ See the distinction between right-censored (e.g. 'present' or '6+') and interval
 =#
 using DrWatson
 @quickactivate "ABC"
-using DataFramesMeta, CSV, Random, Chain
+using DataFramesMeta, CSV, Chain
 using Parquet2: writefile, readfile
 using Proj
 include(srcdir("data_utils.jl"))
 using .DataUtils
 
-const osgb36 = Proj.CRS("EPSG:27700")
-const wgs84 = Proj.CRS("EPSG:4326")
 trans = Proj.Transformation(osgb36, wgs84) # this is expensive, so do it once and reuse it
 
 # Initial load and data cleaning. We will do more cleaning later, but this is to get a sense of the data and how to work with it.

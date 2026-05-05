@@ -6,7 +6,10 @@ using Proj
 using DataFramesMeta, CSV
 using Parquet2: writefile
 
-export convertdate, parse_count, convert_gridref, subset_species
+const osgb36 = Proj.CRS("EPSG:27700")
+const wgs84 = Proj.CRS("EPSG:4326")
+
+export convertdate, parse_count, convert_gridref, subset_species, osgb36, wgs84
 
 """The date may either be in dd/mm/yyyy or yyyy-mm-dd format.
 First drop missing string, then deal with some known bad dates"""
