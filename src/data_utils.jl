@@ -90,7 +90,7 @@ end
     For 'c20', L = 20 and U = missing. 
     For '6+', L = 6 and U = missing. 
     for '>6', L = 7 and U = missing.
-    For 50-70 L = 50 and U = 70. For 50-70 
+    For 50-70 L = 50 and U = 70.
     Type = 1 for exact counts, 2 for right-censored, 3 for interval-censored. This will allow us to model the counts appropriately later on.
 """
 function parse_count(count)

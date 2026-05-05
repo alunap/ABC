@@ -39,6 +39,7 @@ sort!(birds, :Date)
 #select!(birds, [:Species, :Latin, :Date, :Gridref, :Place, :Count])
 
 # Convert grid refs to lat/lon.
+# There are six records with bad grid refs, which we will drop for now. We could try to fix them later, but they are a small proportion of the data.
 birds = @chain birds begin
     @rtransform(:Coordinates = convert_gridref(:Gridref, trans))
     dropmissing(:Coordinates)
@@ -46,10 +47,14 @@ birds = @chain birds begin
     select(Not(:Coordinates))
 end
 
-# There are six records with bad grid refs, which we will drop for now. We could try to fix them later, but they are a small proportion of the data.
+# Transform the whole dataset for the count column. We will have three new columns: L, U, and type. L and U are the lower and upper bounds of the count, and type indicates whether the count is exact (type = 1), right-censored (type = 2), or interval-censored (type = 3). This will allow us to model the counts appropriately later on.
+@rtransform! birds @astable begin
+    parsed = parse_count(:Count)
+    :L = parsed[1]
+    :U = parsed[2]
+    :type = parsed[3]
+end
 
-# Transform the whole dataset
-@rtransform!(birds, :L = parse_count(:Count)[1], :U = parse_count(:Count)[2])
 dropmissing!(birds, [:L, :U])
 # Some bad counts that may be usable: Y, +, '2 (ringed)', '6 at roost', '2 pair', 
 # '11 + 3 juv', 'P', "50 in flock". Split words into the comments.
