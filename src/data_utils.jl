@@ -36,6 +36,10 @@ function convertdate(str)
     end
 end
 
+"""
+    parse_osgb36_gridref(gridref::AbstractString)
+    Parses a grid reference in the OSGB36 format and returns the easting and northing in meters. The OSGB36 grid reference system uses a combination of letters and numbers to specify locations in Great Britain. The first two letters specify a 100km grid square, and the following digits specify the easting and northing within that square. The number of digits must be even, with at least 2 digits for each coordinate.
+"""
 function parse_osgb36_gridref(gridref::AbstractString)
     gridref = uppercase(strip(gridref))
     # Validate format: two letters followed by even number of digits (at least 2 per coord)
@@ -152,7 +156,9 @@ end
 
 
 """
-    Write out separate files for each species of interest. We will focus on a few species for the modelling, but we can always come back and look at others later.
+    subset_species(bird_df, species, save=false)
+    Subset the bird dataframe for a specific species. If save is true, also save the
+    subsetted dataframe to a CSV and Parquet file for later use.
 """
 function subset_species(bird_df, species, save=false)
     ourspecies = @rsubset(bird_df, :Species == species)
