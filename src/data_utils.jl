@@ -74,7 +74,7 @@ function convert_gridref(gridref, trans)
     try
         easting, northing = parse_osgb36_gridref(gridref)
         result = trans(easting, northing)
-        # result is (lon, lat)
+        # result is (lat, lon)
         return result
     catch e
         println("Bad gridref: $gridref ($e)")
@@ -154,10 +154,12 @@ end
 """
     Write out separate files for each species of interest. We will focus on a few species for the modelling, but we can always come back and look at others later.
 """
-function subset_species(bird_df, species)
+function subset_species(bird_df, species, save=false)
     ourspecies = @rsubset(bird_df, :Species == species)
-    CSV.write(datadir("exp_pro", "$species.csv"), ourspecies)
-    writefile(datadir("exp_pro", "$species.parquet"), ourspecies)
+    if save
+        CSV.write(datadir("exp_pro", "$species.csv"), ourspecies)
+        writefile(datadir("exp_pro", "$species.parquet"), ourspecies)
+    end
     return ourspecies
 end
 

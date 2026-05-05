@@ -1,11 +1,11 @@
 #=
-Plot the number of birds seen over time by date and look at time series.
-There are a number of issues, especially with counts. They are not strictly numerical.
-Some just say 'present', but no real indication of how many are present. Others say
+Clean up the bird records data. There are a number of issues, especially with counts. They are not strictly numerical. Also convert grid refs to lat/lon. We will do more cleaning later, but this is to get a sense of the data and how to work with it.
+
+Some counts just say 'present', but no real indication of how many are present. Others say
 'c20' or '6+'. We don't know exactly how many in the first case, but 20 is the estimate.
 We don't know how many more than 6, but at least we know there were 6.
 
-See the distinction between left-censored (e.g. 'present' or '6+') and right-censored (e.g. 'c20') data, and how to model them appropriately. Also the difference between truncated and censored data.
+See the distinction between right-censored (e.g. 'present' or '6+') and interval-censored (e.g. 'c20', '100-150') data, and how to model them appropriately. 
 =#
 using DrWatson
 @quickactivate "ABC"
@@ -38,6 +38,7 @@ sort!(birds, :Date)
 # Drop unneeded columns. Date_to is mostly missing anyway, and sometimes doesn't match Date
 #select!(birds, [:Species, :Latin, :Date, :Gridref, :Place, :Count])
 
+# Convert grid refs to lat/lon.
 birds = @chain birds begin
     @rtransform(:Coordinates = convert_gridref(:Gridref, trans))
     dropmissing(:Coordinates)
@@ -47,21 +48,11 @@ end
 
 # There are six records with bad grid refs, which we will drop for now. We could try to fix them later, but they are a small proportion of the data.
 
-# test examples
-parse_count("present")
-parse_count("10")
-parse_count("c20")
-parse_count("6+")
-parse_count(">6")
-parse_count("> 20")
-parse_count("50-70")
-parse_count("hundreds")# too vague to use in a model
-# Some bad counts that may be usable: Y, +, '2 (ringed)', '6 at roost', '2 pair', 
-# '11 + 3 juv', 'P', "50 in flock". Split words into the comments.
-
 # Transform the whole dataset
 @rtransform!(birds, :L = parse_count(:Count)[1], :U = parse_count(:Count)[2])
 dropmissing!(birds, [:L, :U])
+# Some bad counts that may be usable: Y, +, '2 (ringed)', '6 at roost', '2 pair', 
+# '11 + 3 juv', 'P', "50 in flock". Split words into the comments.
 
 writefile(datadir("exp_pro", "birds.parquet"), birds)
 
@@ -70,8 +61,8 @@ dataset = readfile(datadir("exp_pro", "birds.parquet"))
 birds = DataFrame(dataset)
 
 
-wheatear = subset_species(birds, "Wheatear")
-stonechat = subset_species(birds, "Stonechat")
+wheatear = subset_species(birds, "Wheatear", save=true)
+stonechat = subset_species(birds, "Stonechat", save=true)
 CSV.write(datadir("exp_pro", "ABC_2000_2022.csv"), birds)
 
 #--------------------------------------
