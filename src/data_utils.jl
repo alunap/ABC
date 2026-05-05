@@ -8,6 +8,10 @@ using Parquet2: writefile
 
 const osgb36 = Proj.CRS("EPSG:27700")
 const wgs84 = Proj.CRS("EPSG:4326")
+const upperlimit = 10_000 # a number beyond reasonable biological limits, used for right-censored counts
+const uncensored = 1
+const right_censored = 2
+const interval_censored = 3
 
 export convertdate, parse_count, convert_gridref, subset_species, osgb36, wgs84
 
@@ -93,12 +97,13 @@ end
 """ 
     Convert the counts to two columns, L and U. 
     For specific numbers, L = U = that number. 
-    For 'present', L = 1 and U = missing. 
-    For 'c20', L = 20 and U = missing. 
-    For '6+', L = 6 and U = missing. 
-    for '>6', L = 7 and U = missing.
+    For 'present', L = 1 and U = upperlimit.
+    For 'c20', L = 16 and U = 24.  # limits at ±20% of the count
+    For '6+', L = 6 and U = upperlimit.
+    for '>6', L = 7 and U = upperlimit.
     For 50-70 L = 50 and U = 70.
-    Type = 1 for exact counts, 2 for right-censored, 3 for interval-censored. This will allow us to model the counts appropriately later on.
+    Type = 1 for exact counts, 2 for right-censored, 3 for interval-censored. 
+    This will allow us to model the counts appropriately later on.
 """
 function parse_count(count)
     if ismissing(count)
@@ -106,11 +111,11 @@ function parse_count(count)
     end
     str = lowercase(strip(string(count)))
     if str == "present"
-        return (1, 10_000, 2) # we don't know how many, but we can set an upper bound for modelling purposes
+        return (1, upperlimit, right_censored) # we don't know how many, but we can set an upper bound for modelling purposes
     elseif startswith(str, "c")
         try
             num = parse(Int, strip(str[2:end]))
-            return (Int(round(0.8 * num)), Int(round(1.2 * num)), 3)
+            return (Int(round(0.8 * num)), Int(round(1.2 * num)), interval_censored)
         catch e
             println("Bad count format: $count")
             return (missing, missing, missing)
@@ -118,7 +123,7 @@ function parse_count(count)
     elseif startswith(str, ">")
         try
             num = parse(Int, strip(str[2:end]))
-            return (num + 1, 10_000, 2)
+            return (num + 1, upperlimit, right_censored)
         catch
             println("Bad count format: $count")
             return (missing, missing, missing)
@@ -126,7 +131,7 @@ function parse_count(count)
     elseif endswith(str, "+")
         try
             num = parse(Int, strip(str[1:end-1]))
-            return (num, 10_000, 2) # we don't know how many more, but we can set an upper bound for modelling purposes
+            return (num, upperlimit, right_censored) # we don't know how many more, but we can set an upper bound for modelling purposes
         catch e
             println("Bad count format: $count")
             return (missing, missing, missing)
@@ -137,7 +142,7 @@ function parse_count(count)
             try
                 l = parse(Int, strip(parts[1]))
                 u = parse(Int, strip(parts[2]))
-                return (l, u, 3)
+                return (l, u, interval_censored)
             catch e
                 println("Bad count format: $count")
                 return (missing, missing, missing)
@@ -149,7 +154,7 @@ function parse_count(count)
     else
         try
             num = parse(Int, str)
-            return (num, num, 1)
+            return (num, num, uncensored)
         catch e
             println("Bad count format: $count")
             return (missing, missing, missing)
