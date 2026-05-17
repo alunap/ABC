@@ -1,0 +1,68 @@
+# JAGS model for mixed censoring types in bird count data
+# Handles: exact counts, right-censored ("6+", "10+"), interval-censored ("150-200"), 
+#          and presence-only ("present")
+
+model {
+  # ===== PRIORS =====
+  beta0 ~ dnorm(0, 0.01)           # Intercept
+  beta1 ~ dnorm(0, 0.01)           # Temperature/covariate effect
+  sigma_alpha ~ dunif(0, 10)       # SD of location random effects
+  
+  # Location random effects
+  for (j in 1:N_loc) {
+    alpha[j] ~ dnorm(0, tau_alpha)
+  }
+  tau_alpha <- pow(sigma_alpha, -2)
+  
+  # ===== LIKELIHOOD =====
+  # We separate observations by censoring type and use the appropriate likelihood
+  
+  for (i in 1:N) {
+    # Expected count follows Poisson with log-linear model
+    log(lambda[i]) <- beta0 + beta1 * temp[i] + alpha[loc[i]]
+  }
+  
+  # TYPE 1: Exact counts
+  for (i in 1:N_exact) {
+    y_exact[i] ~ dpois(lambda[idx_exact[i]])
+  }
+  
+  # TYPE 2: Interval censored [L, U]
+  # Use dinterval with known bounds
+  for (i in 1:N_interval) {
+    # The latent count must fall in (bounds_lower[i], bounds_upper[i]]
+    # dinterval returns: 0 if <= bounds_lower, 1 if bounds_lower < <= bounds_upper, 2 if > bounds_upper
+    # We observe 1 for interval-censored
+    y_int_obs[i] ~ dinterval(N_lat_int[i], int_bounds[i,])
+    N_lat_int[i] ~ dpois(lambda[idx_interval[i]])
+  }
+  
+  # TYPE 3: Right censored (count >= L)
+  # Use dinterval: observe 1 means count > cutoff
+  for (i in 1:N_rcens) {
+    y_rcens_obs[i] ~ dinterval(N_lat_rcens[i], rcens_cut[i])
+    N_lat_rcens[i] ~ dpois(lambda[idx_rcens[i]])
+  }
+  
+  # TYPE 4: Presence-only (count >= 1)
+  # Use dinterval: observe 1 means count > 0
+  for (i in 1:N_present) {
+    y_pres_obs[i] ~ dinterval(N_lat_pres[i], 0)
+    N_lat_pres[i] ~ dpois(lambda[idx_present[i]])
+  }
+  
+  # ===== DERIVED QUANTITIES =====
+  for (i in 1:N) {
+    log_lambda[i] <- beta0 + beta1 * temp[i] + alpha[loc[i]]
+  }
+  
+  # Overall mean abundance (accounting for random effects)
+  mean_abundance <- exp(beta0 + pow(sigma_alpha, 2) / 2)
+  
+  # Total abundance across all observations
+  total_exact <- sum(y_exact[])
+  total_interval <- sum(N_lat_int[])
+  total_rcens <- sum(N_lat_rcens[])
+  total_present <- sum(N_lat_pres[])
+  total_abundance <- total_exact + total_interval + total_rcens + total_present
+}

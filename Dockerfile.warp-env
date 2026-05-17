@@ -1,0 +1,55 @@
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# System dependencies for R packages, Julia, and general development
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    ca-certificates \
+    curl \
+    git \
+    gnupg \
+    libcurl4-openssl-dev \
+    libfontconfig1-dev \
+    libfreetype6-dev \
+    libfribidi-dev \
+    libharfbuzz-dev \
+    libjpeg-dev \
+    libpng-dev \
+    libtiff-dev \
+    libxml2-dev \
+    libssl-dev \
+    libgit2-dev \
+    pkg-config \
+    software-properties-common \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install R 4.5.x from CRAN Ubuntu repository
+RUN wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc \
+        | gpg --dearmor -o /usr/share/keyrings/r-project.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/r-project.gpg] https://cloud.r-project.org/bin/linux/ubuntu noble-cran40/" \
+        > /etc/apt/sources.list.d/r-project.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends r-base r-base-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install renv globally for R dependency management
+RUN Rscript -e "install.packages('renv', repos='https://cloud.r-project.org')"
+
+# Install mise (polyglot version manager — used by the project for Python)
+RUN curl https://mise.run | sh
+ENV PATH="/root/.local/share/mise/shims:/root/.local/bin:${PATH}"
+
+# Install Python 3.14 and Julia 1.11 via mise
+RUN mise install python@3.14 && mise use --global python@3.14 \
+    && mise install julia@1.11 && mise use --global julia@1.11
+
+# Install uv (fast Python package manager — used by the project)
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Install DrWatson globally so @quickactivate works from any script
+RUN julia -e 'using Pkg; Pkg.add("DrWatson")'
+
+CMD ["/bin/bash"]

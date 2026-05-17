@@ -68,7 +68,7 @@ wheatear = subset_species(birds, "Wheatear", save=true)
 stonechat = subset_species(birds, "Stonechat", save=true)
 CSV.write(datadir("exp_pro", "ABC_2000_2022.csv"), birds)
 
-#--------------------------------------
+#-----------------------------------------------------------
 # how many species are we dealing with?
 unique(birds, :Species)
 
@@ -76,8 +76,6 @@ unique(birds, :Species)
 unique(birds, :Gridref)
 places = groupby(birds, :Gridref)
 
-
 observers = select(unique(birds, :Observer), :Observer)
 maximum(birds.Date) # end of 2022
 minimum(birds.Date) # one day in 1992, which is odd given the file name. We will drop this record for now, but we could investigate it later.
-early_birds = @rsubset(birds, :Date < Date(2000, 1, 1))
