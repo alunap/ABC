@@ -8,6 +8,9 @@ using .DataUtils
 const osgb36 = Proj.CRS("EPSG:27700")
 const wgs84 = Proj.CRS("EPSG:4326")
 trans = Proj.Transformation(osgb36, wgs84)
+const uncensored = 1
+const right_censored = 2
+const interval_censored = 3
 
 # Run test suite
 println("Starting tests")
@@ -23,14 +26,14 @@ ti = time()
     @test convert_gridref("NR3589", trans) == (56.0204023764831, -6.254147427715612)
     @test convert_gridref("NM3023", trans) == (56.32220230630327, -6.368640794476017)
 
-    @test parse_count("present") == (1, 10_000, 2)
-    @test parse_count("10") == (10, 10, 1)
-    @test parse_count("c20") == (16, 24, 3)
-    @test parse_count("6+") == (6, 10_000, 2)
-    @test parse_count(">6") == (7, 10_000, 2)
-    @test parse_count("> 20") == (21, 10_000, 2)
-    @test parse_count("50-70") == (50, 70, 3)
-    @test ismissing(last(parse_count("hundreds")))
+    @test parse_count("present") == ObsCount(1, 10_000, right_censored)
+    @test parse_count("10") == ObsCount(10, 10, uncensored)
+    @test parse_count("c20") == ObsCount(16, 24, interval_censored)
+    @test parse_count("6+") == ObsCount(6, 10_000, right_censored)
+    @test parse_count(">6") == ObsCount(7, 10_000, right_censored)
+    @test parse_count("> 20") == ObsCount(21, 10_000, right_censored)
+    @test parse_count("50-70") == ObsCount(50, 70, interval_censored)
+    @test parse_count("hundreds") == ObsCount(missing, missing, missing)
 end
 
 ti = time() - ti

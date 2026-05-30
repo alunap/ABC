@@ -48,12 +48,12 @@ end
 # Transform the whole dataset for the count column. We will have three new columns: L, U, and type. L and U are the lower and upper bounds of the count, and type indicates whether the count is exact (type = 1), right-censored (type = 2), or interval-censored (type = 3). This will allow us to model the counts appropriately later on.
 @rtransform! birds @astable begin
     parsed = parse_count(:Count)
-    :L = parsed[1]
-    :U = parsed[2]
-    :type = parsed[3]
+    :L = parsed.lower_bound
+    :U = parsed.upper_bound
+    :type = parsed.censor_type
 end
 
-dropmissing!(birds, [:L, :U])
+dropmissing!(birds, [:L, :U]) # this will drop invalid counts
 # Some bad counts that may be usable: Y, +, '2 (ringed)', '6 at roost', '2 pair', 
 # '11 + 3 juv', 'P', "50 in flock". Split words into the comments.
 
@@ -64,8 +64,8 @@ dataset = readfile(datadir("exp_pro", "birds.parquet"))
 birds = DataFrame(dataset)
 
 
-wheatear = subset_species(birds, "Wheatear", save=true)
-stonechat = subset_species(birds, "Stonechat", save=true)
+wheatear = subset_species(birds, "Wheatear", true)
+stonechat = subset_species(birds, "Stonechat", true)
 CSV.write(datadir("exp_pro", "ABC_2000_2022.csv"), birds)
 
 #-----------------------------------------------------------
