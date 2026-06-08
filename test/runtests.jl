@@ -5,8 +5,6 @@ using Proj, Dates
 include(srcdir("data_utils.jl"))
 using .DataUtils
 
-const osgb36 = Proj.CRS("EPSG:27700")
-const wgs84 = Proj.CRS("EPSG:4326")
 trans = Proj.Transformation(osgb36, wgs84)
 const uncensored = 1
 const right_censored = 2

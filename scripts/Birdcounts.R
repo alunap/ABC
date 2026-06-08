@@ -48,7 +48,7 @@ prior_counts <- prior_predictive(n_samples, data)
 
 # Summarize results
 prior_summary <- data.frame(
-  observation = rep(1:nrow(data), each = n_samples),
+  observation = rep(seq_len(nrow(data)), each = n_samples),
   count = as.vector(prior_counts)
 ) %>%
   group_by(observation) %>%

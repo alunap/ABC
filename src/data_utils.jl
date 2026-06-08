@@ -6,6 +6,8 @@ using Proj
 using DataFramesMeta, CSV
 using Parquet2: writefile
 
+export convertdate, parse_count, convert_gridref, subset_species, ObsCount, osgb36, wgs84
+
 # Projections
 const osgb36 = Proj.CRS("EPSG:27700")
 const wgs84 = Proj.CRS("EPSG:4326")
@@ -35,7 +37,7 @@ struct ObsCount
     censor_type::Union{Int,Missing}
 end
 
-export convertdate, parse_count, convert_gridref, subset_species, ObsCount
+# Functions
 
 """
     convertdate(str, bad_dates=default_bad_dates)
