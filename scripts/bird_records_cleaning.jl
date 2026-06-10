@@ -11,6 +11,7 @@ using DrWatson
 @quickactivate "ABC"
 using DataFramesMeta, CSV, Chain
 using Parquet2: writefile, readfile
+using LibPQ, GeoInterface
 using Proj
 include(srcdir("data_utils.jl"))
 using .DataUtils

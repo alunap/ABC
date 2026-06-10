@@ -6,7 +6,6 @@
 /data
 /videos
 /plots
-/notebooks
 /_research
 
 ################################################################################
@@ -40,6 +39,25 @@ docs/site/
 
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
+
+################################################################################
+#                                 Mise                                         #
+################################################################################
+mise.local.toml
+
+################################################################################
+#                               Visual Studio Code                             #
+################################################################################
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+!*.code-workspace
+
+# Built Visual Studio Code Extensions
+*.vsix
 
 ################################################################################
 #                               Microsoft Office                               #
