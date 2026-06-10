@@ -198,7 +198,7 @@ end
     subsetted dataframe to a CSV and Parquet file for later use.
 """
 function subset_species(bird_df, species, save=false)
-    ourspecies = @rsubset(bird_df, :Species == species)
+    ourspecies = bird_df[bird_df[!, :species].==species, :]
     if save
         CSV.write(datadir("exp_pro", "$species.csv"), ourspecies)
         writefile(datadir("exp_pro", "$species.parquet"), ourspecies)

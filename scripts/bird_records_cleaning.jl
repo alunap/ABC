@@ -10,8 +10,7 @@ See the distinction between right-censored (e.g. 'present' or '6+') and interval
 using DrWatson
 @quickactivate "ABC"
 using DataFramesMeta, CSV, Chain
-using Parquet2: writefile, readfile
-using LibPQ, GeoInterface
+using Parquet2: writefile
 using Proj
 include(srcdir("data_utils.jl"))
 using .DataUtils
@@ -25,13 +24,16 @@ birds = CSV.read(datadir("exp_raw", "ABC_2000_2022.csv"), DataFrame;
     ignoreemptyrows=true,
     missingstring=["", "#N/A"])
 
+# Standardize column names to lowercase for consistent downstream handling.
+rename!(birds, Symbol.(lowercase.(string.(names(birds)))))
+
 # Drop unneeded columns. Date_to is mostly missing anyway, and sometimes doesn't match Date
-select!(birds, Not([:Column14, :Column15, :Sensitive, :Date_To]))
+select!(birds, Not([:column14, :column15, :sensitive, :date_to]))
 
-@rtransform!(birds, :Date = convertdate(:Date))
+@rtransform!(birds, :date = convertdate(:date))
 
-dropmissing!(birds, [:Species, :Date, :Count])
-sort!(birds, :Date)
+dropmissing!(birds, [:species, :date, :count])
+sort!(birds, :date)
 
 # strangely, there are a few observations from 1992, even though the file says it is from 2000
 # Drop unneeded columns. Date_to is mostly missing anyway, and sometimes doesn't match Date
@@ -40,30 +42,25 @@ sort!(birds, :Date)
 # Convert grid refs to lat/lon.
 # There are six records with bad grid refs, which we will drop for now. We could try to fix them later, but they are a small proportion of the data.
 birds = @chain birds begin
-    @rtransform(:Coordinates = convert_gridref(:Gridref, trans))
-    dropmissing(:Coordinates)
-    @rtransform(:Latitude = first(:Coordinates), :Longitude = last(:Coordinates))
-    select(Not(:Coordinates))
+    @rtransform(:coordinates = convert_gridref(:gridref, trans))
+    dropmissing(:coordinates)
+    @rtransform(:latitude = first(:coordinates), :longitude = last(:coordinates))
+    select(Not(:coordinates))
 end
 
 # Transform the whole dataset for the count column. We will have three new columns: L, U, and type. L and U are the lower and upper bounds of the count, and type indicates whether the count is exact (type = 1), right-censored (type = 2), or interval-censored (type = 3). This will allow us to model the counts appropriately later on.
 @rtransform! birds @astable begin
-    parsed = parse_count(:Count)
-    :L = parsed.lower_bound
-    :U = parsed.upper_bound
+    parsed = parse_count(:count)
+    :l = parsed.lower_bound
+    :u = parsed.upper_bound
     :type = parsed.censor_type
 end
 
-dropmissing!(birds, [:L, :U]) # this will drop invalid counts
+dropmissing!(birds, [:l, :u]) # this will drop invalid counts
 # Some bad counts that may be usable: Y, +, '2 (ringed)', '6 at roost', '2 pair', 
 # '11 + 3 juv', 'P', "50 in flock". Split words into the comments.
 
 writefile(datadir("exp_pro", "birds.parquet"), birds)
-
-# Read from here if we have already done the initial cleaning
-dataset = readfile(datadir("exp_pro", "birds.parquet"))
-birds = DataFrame(dataset)
-
 
 wheatear = subset_species(birds, "Wheatear", true)
 stonechat = subset_species(birds, "Stonechat", true)
@@ -71,12 +68,12 @@ CSV.write(datadir("exp_pro", "ABC_2000_2022.csv"), birds)
 
 #-----------------------------------------------------------
 # how many species are we dealing with?
-unique(birds, :Species)
+unique(birds, :species)
 
 # How many places, and how many observations per place?
-unique(birds, :Gridref)
-places = groupby(birds, :Gridref)
+unique(birds, :gridref)
+places = groupby(birds, :gridref)
 
-observers = select(unique(birds, :Observer), :Observer)
-maximum(birds.Date) # end of 2022
-minimum(birds.Date) # one day in 1992, which is odd given the file name. We will drop this record for now, but we could investigate it later.
+observers = select(unique(birds, :observer), :observer)
+maximum(birds.date) # end of 2022
+minimum(birds.date) # one day in 1992, which is odd given the file name. We will drop this record for now, but we could investigate it later.
